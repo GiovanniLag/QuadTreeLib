@@ -12,6 +12,18 @@ namespace sim
         double x;
         double y;
         Point(double x, double y) : x(x), y(y) {}
+
+        // Methods
+        double distance(Point other)
+        {
+			return sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
+		}
+
+        // Operators
+        bool operator==(const Point& other) const
+        {
+			return (x == other.x && y == other.y);
+		}
     }Point;
 
     typedef struct BoundingBox
@@ -19,11 +31,21 @@ namespace sim
         Point topLeft;
         Point bottomRight;
         BoundingBox(Point topLeft, Point bottomRight) : topLeft(topLeft), bottomRight(bottomRight) {}
+        // Methods
         // Check if a point is inside this bounding box
         bool contains(Point pt)
         {
             return (pt.x >= topLeft.x && pt.x <= bottomRight.x && pt.y >= topLeft.y && pt.y <= bottomRight.y);
         }
+        // Check if two bounding boxes intersect
+        bool intersects(BoundingBox other)
+        {
+			if (other.topLeft.x > bottomRight.x || other.bottomRight.x < topLeft.x)
+				return false;
+			if (other.topLeft.y > bottomRight.y || other.bottomRight.y < topLeft.y)
+				return false;
+			return true;
+		}
         // Getters
         double getWidth() const { return bottomRight.x - topLeft.x; }
         double getHeight() const { return bottomRight.y - topLeft.y; }

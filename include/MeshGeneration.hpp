@@ -60,12 +60,47 @@ namespace sim
             {
 				auto leafPoint = std::make_shared<sim::Point>((leaf->getBoundary().topLeft.x + leaf->getBoundary().bottomRight.x) / 2, (leaf->getBoundary().topLeft.y + leaf->getBoundary().bottomRight.y) / 2);
 				mesh.addLink(topLeft, leafPoint);
-				mesh.addLink(topRight, leafPoint);
+				//mesh.addLink(topRight, leafPoint);
 				mesh.addLink(bottomRight, leafPoint);
-				mesh.addLink(bottomLeft, leafPoint);
+				//mesh.addLink(bottomLeft, leafPoint);
                 mesh.addPoint(leafPoint);
             }
         }
+        return mesh;
+    }
+
+    // Another test for mesh generation
+    template <typename uT, typename cT>
+    Mesh generateMesh2(Quadtree<uT, cT>* quadtree)
+    {
+        // Get all leafs of the quadtree
+        std::queue<Quadtree<uT, cT>*> leafsQueue;
+        quadtree->getLeafs(&leafsQueue);
+        // Generate mesh
+        Mesh mesh;
+        // Find all points that "lies" in leaf node bounding-box
+        while (!leafsQueue.empty())
+        {
+            Quadtree<uT, cT>* leaf = leafsQueue.front();
+            leafsQueue.pop();
+
+            std::vector<Point*> pointsInLeaf = quadtree->queryRange(leaf->getBoundary());
+            // Connect points in leaf based on distance
+            for (int i = 0; i < pointsInLeaf.size(); i++)
+            {
+                for (int j = i + 1; j < pointsInLeaf.size(); j++)
+                {
+                    if (pointsInLeaf[i]->distance(*pointsInLeaf[j]) < 0.5)
+                    {
+                        // make shared ptrs to points
+                        auto point1 = std::make_shared<Point>(*pointsInLeaf[i]);
+                        auto point2 = std::make_shared<Point>(*pointsInLeaf[j]);
+						mesh.addLink(point1, point2);
+					}
+				}
+			}
+        }
+
         return mesh;
     }
 }

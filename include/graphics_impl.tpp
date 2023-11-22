@@ -41,6 +41,15 @@ void drawLeafs(sim::Quadtree<uT, cT>* qt, sf::RenderWindow& window)
     }
 }
 
+void drawPoint(const sim::Point* pt, sf::Color color, double pt_size, sf::RenderWindow& window)
+{
+	sf::CircleShape circle(pt_size);
+	circle.setFillColor(color);
+    circle.setOrigin(pt_size, pt_size);
+	circle.setPosition(pt->x, pt->y);
+	window.draw(circle);
+}
+
 template <typename uT, typename cT>
 void drawQuadtree(sim::Quadtree<uT, cT>& qt, sf::RenderWindow& window) {
     // Draw the boundary
@@ -52,11 +61,8 @@ void drawQuadtree(sim::Quadtree<uT, cT>& qt, sf::RenderWindow& window) {
     window.draw(rectangle);
 
     // Draw points
-    for (const auto& point : qt.getPoints()) {
-        sf::CircleShape circle(2);
-        circle.setFillColor(sf::Color::White);
-        circle.setPosition(point.x, point.y);
-        window.draw(circle);
+    for (const auto point : qt.getPoints()) {
+        drawPoint(&point, sf::Color::White, 2, window);
     }
 
     // Draw child quadtrees
@@ -109,6 +115,11 @@ void quadtreeLive(sim::Quadtree<uT, cT>& qt, sim::Mesh& mesh) {
     bool shouldDrawQuadtree = true;
     sim::Quadtree<uT, cT>* nodeForNeighbours = nullptr;
     sim::Quadtree<uT, cT>* neighboursAndNodeList[5];
+    bool selectionMode = false;
+    int clickCount = 0;
+    sf::Vector2f topLeft, bottomRight;
+    sf::RectangleShape selectionRectangle;
+    std::vector<sim::Point*> selectedPoints;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -118,7 +129,7 @@ void quadtreeLive(sim::Quadtree<uT, cT>& qt, sim::Mesh& mesh) {
             }
 
             // Handle left mouse button click
-            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && !selectionMode) {
                 float x = static_cast<float>(event.mouseButton.x);
                 float y = static_cast<float>(event.mouseButton.y);
                 qt.insert(sim::Point(x, y)); // Insert the point into the Quadtree
@@ -151,11 +162,68 @@ void quadtreeLive(sim::Quadtree<uT, cT>& qt, sim::Mesh& mesh) {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::M) {
 				shouldDrawMesh = !shouldDrawMesh;
 			}
+            // CTRL + M to regenerate the mesh
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::M && sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+                mesh = sim::generateMesh2(&qt);
+                std::cout << "Mesh regenerated" << std::endl;
+			}
 
             // Handle "Q" key press to toggle the drawing of the Quadtree
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Q) {
                 shouldDrawQuadtree = !shouldDrawQuadtree;
 			}
+
+            // Toggle selection mode on "P" key press
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::P) {
+                std::cout << "Selection mode " << (selectionMode ? "off" : "on") << std::endl;
+                selectionMode = !selectionMode;
+                clickCount = 0; // Reset click count
+                // Reset selection rectangle
+                selectionRectangle.setSize(sf::Vector2f(0, 0));
+            }
+
+            // Handle mouse clicks for selection
+            if (selectionMode && event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                if (clickCount == 0) {
+                    // First click - set top-left corner
+                    topLeft.x = static_cast<float>(event.mouseButton.x);
+                    topLeft.y = static_cast<float>(event.mouseButton.y);
+                    clickCount++;
+                }
+                else if (clickCount == 1) {
+                    // Second click - set bottom-right corner and finalize the rectangle
+                    bottomRight.x = static_cast<float>(event.mouseButton.x);
+                    bottomRight.y = static_cast<float>(event.mouseButton.y);
+
+                    // Safty check to ensure the rectangle is not inverted
+                    if (bottomRight.x < topLeft.x) {
+						float temp = topLeft.x;
+						topLeft.x = bottomRight.x;
+						bottomRight.x = temp;
+					}
+                    if (bottomRight.y < topLeft.y) {
+                        float temp = topLeft.y;
+                        topLeft.y = bottomRight.y;
+                        bottomRight.y = temp;
+                    }
+
+                    selectionRectangle.setPosition(topLeft);
+
+                    sf::Vector2f size(bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+                    selectionRectangle.setSize(size);
+                    selectionRectangle.setFillColor(sf::Color::Transparent);
+                    selectionRectangle.setOutlineColor(sf::Color::Yellow);
+                    selectionRectangle.setOutlineThickness(1);
+
+                    // Query points in the selected region
+                    sf::FloatRect rect(topLeft, size);
+                    sim::BoundingBox rectBBox = sim::BoundingBox(sim::Point(rect.left, rect.top), sim::Point(rect.left + rect.width, rect.top + rect.height));
+                    selectedPoints = qt.queryRange(rectBBox);
+                    std::cout << "Points in region: " << selectedPoints.size() << std::endl;
+
+                    clickCount = 0; // Reset click count
+                }
+            }
         }
 
         window.clear(sf::Color::Black); // Clear the window
@@ -178,6 +246,15 @@ void quadtreeLive(sim::Quadtree<uT, cT>& qt, sim::Mesh& mesh) {
         if (shouldDrawMesh) {
 			drawMesh(mesh, window);
 		}
+
+        // Draw selection rectangle if in selection mode
+        if (selectionMode) {
+            window.draw(selectionRectangle);
+            // Hilight selected points
+            for (const sim::Point* p : selectedPoints) {
+                drawPoint(p, sf::Color::Yellow, 4, window);
+            }
+        }
 
         window.display(); // Display everything we have drawn
     }

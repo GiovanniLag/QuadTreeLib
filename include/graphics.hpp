@@ -3,11 +3,14 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include "MeshGeneration.hpp"
 
 template <typename uT, typename cT> class sim::Quadtree;
 
 template <typename uT, typename cT>
 sim::Quadtree<uT, cT>* selectNode(float x, float y, sim::Quadtree<uT, cT>* qt); // Select a node from the quadtree based on x and y coordinates
+
+void drawPoint(const sim::Point* pt, sf::Color color, double pt_size, sf::RenderWindow& window); // Draw a point
 
 template <typename uT, typename cT>
 void drawLeafs(sim::Quadtree<uT, cT>* qt, sf::RenderWindow& window); // Draw the leafs of the quadtree

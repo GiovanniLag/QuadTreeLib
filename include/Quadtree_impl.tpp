@@ -164,6 +164,44 @@ namespace sim
         }
     }
 
+    // Search for all points in range of a boundary
+    template <typename uT, typename cT>
+    std::vector<Point*> Quadtree<uT, cT>::queryRange(BoundingBox region)
+    {
+        // Check that region intersects with quadtree boundary
+        if (!boundary.intersects(region))
+        {
+			return std::vector<Point*>();
+		}
+        // Create vector of points to return
+		std::vector<Point*> pointsInRange;
+		// Add the points at this quad level
+        for (int i = 0; i < points.size(); i++)
+        {
+            if (region.contains(points[i]))
+            {
+				pointsInRange.push_back(&points[i]);
+			}
+		}
+		// Terminate here if quadtree is not divided
+        if (!divided)
+        {
+			return pointsInRange;
+		}
+		// Otherwise, add the points from the sub-quads
+		std::vector<Point*> pointsFromNorthWest = northWest->queryRange(region);
+		std::vector<Point*> pointsFromNorthEast = northEast->queryRange(region);
+		std::vector<Point*> pointsFromSouthWest = southWest->queryRange(region);
+		std::vector<Point*> pointsFromSouthEast = southEast->queryRange(region);
+		// Add the points from the sub-quads to the vector to return
+		pointsInRange.insert(pointsInRange.end(), pointsFromNorthWest.begin(), pointsFromNorthWest.end());
+		pointsInRange.insert(pointsInRange.end(), pointsFromNorthEast.begin(), pointsFromNorthEast.end());
+		pointsInRange.insert(pointsInRange.end(), pointsFromSouthWest.begin(), pointsFromSouthWest.end());
+		pointsInRange.insert(pointsInRange.end(), pointsFromSouthEast.begin(), pointsFromSouthEast.end());
+		// Return the points in range
+		return pointsInRange;
+    }
+
 
     // Recursive functions to get node neighbours
     // Helper function to backtrace north

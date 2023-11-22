@@ -54,7 +54,7 @@ namespace sim
         // Main methods
         void subdivide();
         bool insert(Point point);
-        std::vector<Point> queryRange(BoundingBox range);
+        std::vector<Point*> queryRange(BoundingBox range); // Get all points inside a range
         void balance();
         void getLeafs(std::queue<Quadtree*>* leafsQueue); // Get all leafs of the quadtree, provide a queue to store them
 
