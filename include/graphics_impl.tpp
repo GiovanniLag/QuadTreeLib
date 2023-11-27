@@ -182,6 +182,12 @@ void quadtreeLive(sim::Quadtree<uT, cT>& qt, sim::Mesh& mesh) {
                 selectionRectangle.setSize(sf::Vector2f(0, 0));
             }
 
+            // Handle "S" key press to save the Quadtree as an image
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::S) {
+				rwToImage(window, "quadtree_screenshot.png");
+				std::cout << "Quadtree saved as image" << std::endl;
+			}
+
             // Handle mouse clicks for selection
             if (selectionMode && event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 if (clickCount == 0) {

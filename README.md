@@ -1,3 +1,5 @@
+![[imgs/QuadTree_example_image.png]]
+
 # QuadTreeLib
 
 A C++ Library for QuadTree with custom user defined crowdness criteria and data.
