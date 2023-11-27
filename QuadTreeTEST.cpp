@@ -15,7 +15,7 @@
 int main()
 {
     // PointCloud
-    sim::PointCloud pc = sim::generateCircle(cwidth / 2, cheight / 2, 300, 400);
+    sim::PointCloud pc = sim::generateCircle(cwidth / 2, cheight / 2, 300, 100);
 
     // Test quadtree generation
     sim::BoundingBox boundary = sim::BoundingBox(sim::Point(0, 0), sim::Point(cwidth, cheight));

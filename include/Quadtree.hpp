@@ -47,7 +47,9 @@ namespace sim
     public:
         Quadtree(BoundingBox boundary, int capacity); // Constructor that uses simple isCrowded function (see utility.hpp)
         Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree*, cT)> isCrowded, cT isCrowdedData);// Constructor that uses custom isCrowded function
-        Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree *, cT)> isCrowded, cT isCrowdedData, Quadtree* parent, int type); // Principal constructor
+        Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree*, cT)> isCrowded, cT isCrowdedData, uT userData);// Constructor that uses custom isCrowded function and userData
+        Quadtree(BoundingBox boundary, int capacity, uT userData);// Constructor that uses custom userData
+        Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree *, cT)> isCrowded, cT isCrowdedData, uT userData, Quadtree* parent, int type); // Principal constructor
         Quadtree(BoundingBox boundary, Quadtree* parent, int type); // Constructor used by subdivide function
         ~Quadtree();
         
@@ -57,6 +59,9 @@ namespace sim
         std::vector<Point*> queryRange(BoundingBox range); // Get all points inside a range
         void balance();
         void getLeafs(std::queue<Quadtree*>* leafsQueue); // Get all leafs of the quadtree, provide a queue to store them
+
+        // Special methods
+        void forceInsert(Point point); // Insert a point even if the quadtree is crowded
 
         // Getters and setters
         BoundingBox getBoundary() const { return boundary; }

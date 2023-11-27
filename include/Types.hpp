@@ -14,10 +14,22 @@ namespace sim
         Point(double x, double y) : x(x), y(y) {}
 
         // Methods
+        double squareDistance(Point other)
+        {
+            return pow(x - other.x, 2) + pow(y - other.y, 2);
+        }
+        double squareDistance(Point* other)
+        {
+			return pow(x - other->x, 2) + pow(y - other->y, 2);
+		}
         double distance(Point other)
         {
 			return sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
 		}
+        double distance(Point* other)
+        {
+            return sqrt(pow(x - other->x, 2) + pow(y - other->y, 2));
+        }
 
         // Operators
         bool operator==(const Point& other) const
@@ -105,6 +117,25 @@ namespace sim
         void addLink(Link link) { links.push_back(link); }
         void addLink(std::shared_ptr<Point> p1, std::shared_ptr<Point> p2) { links.push_back(Link(p1, p2)); }
     }Mesh;
+
+    /* (p1, p2, p3) and (*a1, *a2, *a3) where *ai are pointers to adjeson triangles
+     *ai would rappresent the triangle adjacent to the opposite side respect to vertex pi
+     if there is no adjacent triangle, *ai then points to frist triangle encountered going counter-clockwise
+     from the opposite side respect to vertex pi*/
+    typedef struct Triangle
+    {
+		std::shared_ptr<Point> p1;
+		std::shared_ptr<Point> p2;
+		std::shared_ptr<Point> p3;
+
+        std::shared_ptr<Triangle> a1;
+        std::shared_ptr<Triangle> a2;
+        std::shared_ptr<Triangle> a3;
+
+        Triangle(std::shared_ptr<Point> p1, std::shared_ptr<Point> p2, std::shared_ptr<Point> p3) : p1(p1), p2(p2), p3(p3) {}
+        Triangle() {}
+
+    }Triangle;
 
 }
 

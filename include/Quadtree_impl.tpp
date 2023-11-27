@@ -1,5 +1,25 @@
 namespace sim
 {
+    // Principal constructor
+    template <typename uT, typename cT>
+    Quadtree<uT, cT>::Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree<uT, cT>*, cT)> isCrowded, cT isCrowdedData, uT userData, Quadtree<uT, cT>* parent, int type) : boundary(boundary), capacity(capacity), divided(false), isCrowded(isCrowded), isCrowdedData(isCrowdedData), userData(userData), parent(parent), type(type)
+    {
+        points.reserve(capacity); // Reserve memory for the points vector
+        northWest = nullptr;
+        northEast = nullptr;
+        southWest = nullptr;
+        southEast = nullptr;
+        // Set the depth of the Quadtree
+        if (parent != nullptr)
+        {
+            depth = parent->depth + 1;
+        }
+        else
+        {
+            depth = 0;
+        }
+    }
+
     // Constructor for the Quadtree class with default isCrowded function
     template <typename uT, typename cT>
     Quadtree<uT, cT>::Quadtree(BoundingBox boundary, int capacity)
@@ -8,6 +28,7 @@ namespace sim
             capacity,
             [](Quadtree<uT, cT>* quadtree, cT data) { return quadtree->points.size() >= quadtree->capacity; },
             cT(),
+            uT(),
             nullptr,
             0)
     {
@@ -22,29 +43,40 @@ namespace sim
             capacity,
             isCrowded,
             isCrowdedData,
-            nullptr)
+            uT(),
+            nullptr,
+            0)
     {
 		// Delegate to the principal constructor
 	}
 
-    // Principal constructor
+    // Constructor for the Quadtree class with custom isCrowded function and user data
     template <typename uT, typename cT>
-    Quadtree<uT, cT>::Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree<uT, cT>*, cT)> isCrowded, cT isCrowdedData, Quadtree<uT, cT>* parent, int type) : boundary(boundary), capacity(capacity), divided(false), isCrowded(isCrowded), isCrowdedData(isCrowdedData), parent(parent), type(type)
+    Quadtree<uT, cT>::Quadtree(BoundingBox boundary, int capacity, std::function<bool(Quadtree*, cT)> isCrowded, cT isCrowdedData, uT userData)
+        : Quadtree(
+            boundary,
+            capacity,
+            isCrowded,
+            isCrowdedData,
+            userData,
+            nullptr,
+            0)
     {
-        points.reserve(capacity); // Reserve memory for the points vector
-        northWest = nullptr;
-        northEast = nullptr;
-        southWest = nullptr;
-        southEast = nullptr;
-        // Set the depth of the Quadtree
-        if (parent != nullptr)
-        {
-            depth = parent->depth + 1;
-        }
-        else
-        {
-			depth = 0;
-        }
+        // Delegate to the principal constructor
+    }
+
+    template <typename uT, typename cT>
+    Quadtree<uT, cT>::Quadtree(BoundingBox boundary, int capacity, uT userData)
+        : Quadtree(
+            boundary,
+            capacity,
+            [](Quadtree<uT, cT>* quadtree, cT data) { return quadtree->points.size() >= quadtree->capacity; },
+            cT(),
+            userData,
+            nullptr,
+            0)
+    {
+        // Delegate to the principal constructor
     }
 
     // Constructor with parent specified, used by subdivide function
@@ -55,6 +87,7 @@ namespace sim
             parent->getCapacity(),
             parent->getIsCrowdedFun(),
             cT(),
+            uT(),
             parent,
             type)
     {
@@ -146,6 +179,14 @@ namespace sim
         // Otherwise, the point cannot be inserted for some unknown reason (this should never happen)
         return false;
     }
+
+
+    // Insert a point in the quadtree even if it is crowded
+    template <typename uT, typename cT>
+    void Quadtree<uT, cT>::forceInsert(Point pt)
+    {
+        points.push_back(pt);
+	}
 
     // Create list of leaf nodes
     template <typename uT, typename cT>
